@@ -1,14 +1,13 @@
 import sys
 from pathlib import Path
 
-# rag/answer.py utilise des imports simples (from retriever import ...), qui ne
-# fonctionnent que si le dossier rag/ est sur le chemin de recherche Python.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "rag"))
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from answer import repondre
+from answer import repondre_stream
 
 app = FastAPI(
     title="Chatbot Etat Civil API",
@@ -17,25 +16,20 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # a restreindre au domaine du frontend une fois deploye
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
+class MessageItem(BaseModel):
+    role: str = Field(..., description="'user' ou 'bot'")
+    texte: str = Field(..., min_length=1)
+
+
 class QuestionRequest(BaseModel):
-    question: str = Field(..., min_length=3, description="La question de l'utilisateur")
+    messages: list[MessageItem] = Field(..., min_length=1, description="Historique complet de la conversation")
     top_k: int = Field(5, ge=1, le=10, description="Nombre de chunks a recuperer")
-
-
-class SourceItem(BaseModel):
-    titre: str
-    url: str
-
-
-class ReponseModel(BaseModel):
-    reponse: str
-    sources: list[SourceItem]
 
 
 @app.get("/")
@@ -48,14 +42,15 @@ def sante():
     return {"status": "ok"}
 
 
-@app.post("/chat", response_model=ReponseModel)
+@app.post("/chat")
 def chat(payload: QuestionRequest):
-    try:
-        reponse_texte, sources = repondre(payload.question, top_k=payload.top_k)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur lors de la generation de la reponse : {e}")
+    historique = [{"role": m.role, "texte": m.texte} for m in payload.messages]
 
-    return {
-        "reponse": reponse_texte,
-        "sources": [{"titre": t, "url": u} for t, u in sources],
-    }
+    def flux():
+        try:
+            for morceau in repondre_stream(historique, top_k=payload.top_k):
+                yield morceau
+        except Exception as e:
+            yield f"\nUne erreur est survenue : {e}"
+
+    return StreamingResponse(flux(), media_type="text/plain; charset=utf-8")

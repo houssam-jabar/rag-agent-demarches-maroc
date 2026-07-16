@@ -7,7 +7,7 @@ IN_FILE = Path("data/processed/documents_clean.jsonl")
 OUT_FILE = Path("data/processed/chunks.jsonl")
 
 TAILLE_CIBLE_TOKENS = 300
-CHEVAUCHEMENT_TOKENS = 45  # environ 15% de 300
+CHEVAUCHEMENT_TOKENS = 45
 
 encodeur = tiktoken.get_encoding("cl100k_base")
 

@@ -5,8 +5,6 @@ from pathlib import Path
 IN_FILE = Path("data/processed/documents.jsonl")
 OUT_FILE = Path("data/processed/documents_clean.jsonl")
 
-# Lignes publicitaires/bruit qui reviennent sur presque toutes les pages du site
-# (blocs "contactez nos conseillers"), reperees en inspectant les articles bruts.
 LIGNES_BRUIT_EXACTES = {
     "vous avez des questions sur",
     "vos",
@@ -23,14 +21,14 @@ LIGNES_BRUIT_EXACTES = {
 }
 
 MOTIFS_BRUIT_PARTIEL = [
-    "mise à jour le",  # ligne "Par ... - Mise a jour le ... - Temps de lecture estime..."
+    "mise à jour le",
 ]
 
 
 def est_ligne_bruit(ligne):
     l = ligne.strip().lower()
     if not l:
-        return True  # ligne vide
+        return True
     if l in LIGNES_BRUIT_EXACTES:
         return True
     if any(motif in l for motif in MOTIFS_BRUIT_PARTIEL):

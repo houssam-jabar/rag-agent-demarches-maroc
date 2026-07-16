@@ -10,7 +10,7 @@ OUT_FILE = Path("data/processed/documents.jsonl")
 OUT_FILE.parent.mkdir(parents=True, exist_ok=True)
 
 MAX_TENTATIVES = 4
-ATTENTE_ENTRE_TENTATIVES = 8  # secondes ; le site est instable par intermittence
+ATTENTE_ENTRE_TENTATIVES = 8
 
 
 def trouver_container(soup):

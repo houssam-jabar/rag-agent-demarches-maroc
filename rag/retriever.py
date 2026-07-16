@@ -3,7 +3,7 @@ from sentence_transformers import SentenceTransformer
 
 INDEX_HOST = "pfa-etat-civil-fh6yu4i.svc.aped-4627-b74a.pinecone.io"
 
-_modele = None  # charge une seule fois, reutilise a chaque appel
+_modele = None
 
 
 def _charger_modele():
@@ -22,7 +22,6 @@ def _charger_cle_pinecone():
 
 
 def rechercher_chunks(question, top_k=5):
-    """Retourne les top_k chunks les plus pertinents pour une question donnee."""
     modele = _charger_modele()
     vecteur_question = modele.encode([f"query: {question}"], normalize_embeddings=True)[0].tolist()
 
@@ -47,7 +46,6 @@ def rechercher_chunks(question, top_k=5):
 
 
 if __name__ == "__main__":
-    # petit test manuel du module tout seul
     question = "Quels documents faut-il pour declarer la naissance d'un enfant ?"
     for chunk in rechercher_chunks(question, top_k=3):
         print(f"[{chunk['score']:.3f}] {chunk['titre']}")

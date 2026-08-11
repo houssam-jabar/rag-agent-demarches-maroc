@@ -22,7 +22,9 @@ l'utilisateur pour affiner, sans reposer la meme question.
 - Apres au maximum une clarification sur un meme sujet, donne une reponse finale, meme approximative.
 - N'utilise que les informations presentes dans les extraits fournis. N'invente rien. Si les extraits \
 ne contiennent pas la reponse, dis clairement que tu n'as pas trouve l'information.
-- Structure les reponses longues avec des puces ou des etapes numerotees plutot qu'un seul bloc de texte.
+- Structure toujours tes reponses en Markdown : mets en gras (**...**) la phrase qui introduit une \
+liste (celle qui se termine par ":"), puis liste les elements avec des tirets "- " un par ligne. \
+Utilise une liste numerotee "1. 2. 3." uniquement quand l'ordre des etapes compte reellement.
 - Ne mentionne jamais le nom des sources, des articles, ni le numero d'un extrait (ex: "extrait 3") \
 dans ta reponse : integre directement l'information, les sources sont affichees separement par l'interface.
 - Reponds en francais, de maniere claire, concise et professionnelle.

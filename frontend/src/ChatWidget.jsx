@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import ReactMarkdown from 'react-markdown'
 import './ChatWidget.css'
 
 const API_URL = 'http://127.0.0.1:8000/chat'
@@ -9,6 +10,15 @@ const SUGGESTIONS = [
   'Comment se marier au Maroc ?',
   "Prix d'un extrait de casier judiciaire ?",
 ]
+
+function dedupliquerSources(sources) {
+  const vues = new Set()
+  return sources.filter((s) => {
+    if (vues.has(s.url)) return false
+    vues.add(s.url)
+    return true
+  })
+}
 
 function ChatWidget() {
   const [ouvert, setOuvert] = useState(false)
@@ -134,14 +144,26 @@ function ChatWidget() {
               const estDernier = i === messages.length - 1
               const enAttente = estDernier && m.role === 'bot' && chargement && !m.texte
 
+              const sourcesUniques = m.sources ? dedupliquerSources(m.sources) : []
+
               return (
                 <div key={i} className={`dm-message dm-${m.role}`}>
                   {enAttente ? (
                     <div className="dm-frappe" aria-label="Le chatbot ecrit">
                       <span></span><span></span><span></span>
                     </div>
+                  ) : m.role === 'bot' ? (
+                    <ReactMarkdown>{m.texte}</ReactMarkdown>
                   ) : (
                     <p>{m.texte}</p>
+                  )}
+                  {sourcesUniques.length > 0 && (
+                    <div className="dm-verification">
+                      <span>Vérifier :</span>
+                      {sourcesUniques.map((s, j) => (
+                        <a key={j} href={s.url} target="_blank" rel="noreferrer">{s.titre}</a>
+                      ))}
+                    </div>
                   )}
                 </div>
               )

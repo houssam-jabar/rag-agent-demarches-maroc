@@ -2,6 +2,7 @@ import json
 import re
 import httpx
 from retriever import rechercher_chunks
+from config import charger_variable_env
 
 MODELE_LLM = "llama-3.3-70b-versatile"
 
@@ -33,14 +34,6 @@ dans ta reponse : integre directement l'information, les sources sont affichees 
 MOTIF_SOURCE_FINALE = re.compile(
     r"\n*\s*(source|sources)\s*:.*$", re.IGNORECASE | re.DOTALL
 )
-
-
-def _charger_cle_groq():
-    with open(".env", encoding="utf-8") as f:
-        for line in f:
-            if line.startswith("GROQ_API_KEY"):
-                return line.strip().split("=", 1)[1]
-    raise RuntimeError("GROQ_API_KEY introuvable dans .env")
 
 
 def construire_contexte(chunks):
@@ -78,7 +71,7 @@ def _preparer_appel(historique, top_k):
 def repondre(historique, top_k=5):
     messages, sources = _preparer_appel(historique, top_k)
 
-    api_key = _charger_cle_groq()
+    api_key = charger_variable_env("GROQ_API_KEY")
     r = httpx.post(
         "https://api.groq.com/openai/v1/chat/completions",
         headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
@@ -93,7 +86,7 @@ def repondre(historique, top_k=5):
 
 def repondre_stream(historique, top_k=5):
     messages, sources = _preparer_appel(historique, top_k)
-    api_key = _charger_cle_groq()
+    api_key = charger_variable_env("GROQ_API_KEY")
 
     with httpx.stream(
         "POST",

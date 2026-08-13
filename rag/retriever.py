@@ -1,5 +1,6 @@
 import httpx
 from sentence_transformers import SentenceTransformer
+from config import charger_variable_env
 
 INDEX_HOST = "pfa-etat-civil-fh6yu4i.svc.aped-4627-b74a.pinecone.io"
 
@@ -13,19 +14,11 @@ def _charger_modele():
     return _modele
 
 
-def _charger_cle_pinecone():
-    with open(".env", encoding="utf-8") as f:
-        for line in f:
-            if line.startswith("PINECONE_API_KEY"):
-                return line.strip().split("=", 1)[1]
-    raise RuntimeError("PINECONE_API_KEY introuvable dans .env")
-
-
 def rechercher_chunks(question, top_k=5):
     modele = _charger_modele()
     vecteur_question = modele.encode([f"query: {question}"], normalize_embeddings=True)[0].tolist()
 
-    api_key = _charger_cle_pinecone()
+    api_key = charger_variable_env("PINECONE_API_KEY")
     r = httpx.post(
         f"https://{INDEX_HOST}/query",
         headers={"Api-Key": api_key, "Content-Type": "application/json"},

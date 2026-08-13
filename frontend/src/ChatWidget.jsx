@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import './ChatWidget.css'
 
-const API_URL = 'http://127.0.0.1:8000/chat'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+const API_URL = `${API_BASE}/chat`
 const MARQUEUR_SOURCES = '<<<SOURCES>>>'
 
 const SUGGESTIONS = [

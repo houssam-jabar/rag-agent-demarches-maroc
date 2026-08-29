@@ -4,7 +4,7 @@ import httpx
 from retriever import rechercher_chunks
 from config import charger_variable_env
 
-MODELE_LLM = "llama-3.3-70b-versatile"
+MODELE_LLM = "openai/gpt-oss-120b"
 
 MARQUEUR_SOURCES = "<<<SOURCES>>>"
 
@@ -75,7 +75,7 @@ def repondre(historique, top_k=5):
     r = httpx.post(
         "https://api.groq.com/openai/v1/chat/completions",
         headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-        json={"model": MODELE_LLM, "messages": messages, "max_tokens": 500, "temperature": 0.2},
+        json={"model": MODELE_LLM, "messages": messages, "max_tokens": 800, "temperature": 0.2},
         timeout=30,
     )
     r.raise_for_status()
@@ -92,7 +92,7 @@ def repondre_stream(historique, top_k=5):
         "POST",
         "https://api.groq.com/openai/v1/chat/completions",
         headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-        json={"model": MODELE_LLM, "messages": messages, "max_tokens": 500, "temperature": 0.2, "stream": True},
+        json={"model": MODELE_LLM, "messages": messages, "max_tokens": 800, "temperature": 0.2, "stream": True},
         timeout=30,
     ) as r:
         r.raise_for_status()

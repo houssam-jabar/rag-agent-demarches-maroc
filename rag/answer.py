@@ -52,9 +52,50 @@ def nettoyer_reponse(texte):
     return texte.strip()
 
 
-def _preparer_appel(historique, top_k):
+PROMPT_REFORMULATION = """Tu es un module de reformulation de requete pour un moteur de recherche documentaire.
+
+Historique recent de la conversation :
+{contexte_conversation}
+
+Ta seule tache consiste a ecrire une requete de recherche courte (5 a 10 mots), en francais, representant \
+ce que l'utilisateur veut savoir MAINTENANT (son tout dernier message) :
+- Si ce dernier message est une reponse breve a une clarification demandee juste avant par l'assistant \
+(par exemple une precision de situation), combine-le avec le sujet initial de la conversation.
+- Si ce dernier message introduit un sujet different de ce qui precede, ignore le reste de l'historique \
+et base ta requete uniquement sur ce dernier message.
+
+Ecris uniquement la requete de recherche finale. Aucun texte avant ou apres, aucun guillemet, aucune \
+explication, aucune reformulation de cette consigne."""
+
+
+def _reformuler_requete(historique):
     questions_utilisateur = [t["texte"] for t in historique if t["role"] == "user"]
-    requete_recherche = " ".join(questions_utilisateur)
+    if len(historique) < 3 or len(questions_utilisateur) < 2:
+        return questions_utilisateur[-1] if questions_utilisateur else ""
+
+    tours_recents = historique[-4:]
+    contexte_conversation = "\n".join(
+        f"{'Utilisateur' if t['role'] == 'user' else 'Assistant'} : {t['texte']}" for t in tours_recents
+    )
+
+    api_key = charger_variable_env("GROQ_API_KEY")
+    r = httpx.post(
+        "https://api.groq.com/openai/v1/chat/completions",
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        json={
+            "model": MODELE_LLM,
+            "messages": [{"role": "user", "content": PROMPT_REFORMULATION.format(contexte_conversation=contexte_conversation)}],
+            "max_tokens": 300,
+            "temperature": 0,
+        },
+        timeout=15,
+    )
+    r.raise_for_status()
+    return r.json()["choices"][0]["message"]["content"].strip().strip('"')
+
+
+def _preparer_appel(historique, top_k):
+    requete_recherche = _reformuler_requete(historique)
     chunks = rechercher_chunks(requete_recherche, top_k=top_k)
     contexte = construire_contexte(chunks)
 

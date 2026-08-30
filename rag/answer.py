@@ -28,6 +28,9 @@ liste (celle qui se termine par ":"), puis liste les elements avec des tirets "-
 Utilise une liste numerotee "1. 2. 3." uniquement quand l'ordre des etapes compte reellement.
 - Ne mentionne jamais le nom des sources, des articles, ni le numero d'un extrait (ex: "extrait 3") \
 dans ta reponse : integre directement l'information, les sources sont affichees separement par l'interface.
+- Si tu mentionnes un site ou une adresse web (ex: un portail officiel), ecris-la toujours comme un \
+vrai lien Markdown avec un texte descriptif, par exemple [portail Watiqa](https://www.watiqa.ma) — \
+jamais entre apostrophes inverses (backticks) ni en texte brut.
 - Reponds en francais, de maniere claire, concise et professionnelle.
 """
 

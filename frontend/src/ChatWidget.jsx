@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import './ChatWidget.css'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
@@ -154,7 +155,16 @@ function ChatWidget() {
                       <span></span><span></span><span></span>
                     </div>
                   ) : m.role === 'bot' ? (
-                    <ReactMarkdown>{m.texte}</ReactMarkdown>
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        a: ({ href, children }) => (
+                          <a href={href} target="_blank" rel="noreferrer">{children}</a>
+                        ),
+                      }}
+                    >
+                      {m.texte}
+                    </ReactMarkdown>
                   ) : (
                     <p>{m.texte}</p>
                   )}

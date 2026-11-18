@@ -1,0 +1,32 @@
+.page-hote {
+  min-height: 100vh;
+  background: #f0f1ef;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+.page-hote-contenu {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 60px 24px;
+  color: #444;
+}
+
+.page-hote-etiquette {
+  display: inline-block;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8b2332;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.page-hote-contenu h1 {
+  font-size: 24px;
+  color: #14513a;
+  margin: 0 0 14px;
+}
+
+.page-hote-contenu p {
+  line-height: 1.6;
+}

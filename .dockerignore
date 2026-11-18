@@ -1,0 +1,14 @@
+venv/
+frontend/
+data/
+rapport/
+.git/
+.vscode/
+__pycache__/
+*.pyc
+.env
+scraper/
+processing/
+ingestion/
+demarrer.vbs
+README.md

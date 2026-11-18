@@ -1,0 +1,161 @@
+import json
+import re
+import httpx
+from retriever import rechercher_chunks
+from config import charger_variable_env
+
+MODELE_LLM = "openai/gpt-oss-120b"
+
+MARQUEUR_SOURCES = "<<<SOURCES>>>"
+
+PROMPT_SYSTEME = """Tu es un conseiller qui aide les usagers avec les demarches d'etat civil au Maroc \
+(acte de naissance, mariage, deces, livret de famille, etc.), en te basant UNIQUEMENT sur les extraits \
+fournis ci-dessous.
+
+Comportement attendu :
+- Donne toujours la meilleure reponse possible avec les informations deja disponibles (question et \
+historique), meme si elle est generale.
+- Si un detail manquant changerait significativement la reponse (nee au Maroc ou a l'etranger, \
+marocaine ou etrangere, majeure ou mineure, premiere demande ou duplicata...), ajoute UNE SEULE \
+question de clarification courte a la toute fin de ta reponse.
+- Ne repete jamais une clarification deja demandee dans l'historique : utilise la reponse de \
+l'utilisateur pour affiner, sans reposer la meme question.
+- Apres au maximum une clarification sur un meme sujet, donne une reponse finale, meme approximative.
+- N'utilise que les informations presentes dans les extraits fournis. N'invente rien. Si les extraits \
+ne contiennent pas la reponse, dis clairement que tu n'as pas trouve l'information.
+- Structure toujours tes reponses en Markdown : mets en gras (**...**) la phrase qui introduit une \
+liste (celle qui se termine par ":"), puis liste les elements avec des tirets "- " un par ligne. \
+Utilise une liste numerotee "1. 2. 3." uniquement quand l'ordre des etapes compte reellement.
+- Ne mentionne jamais le nom des sources, des articles, ni le numero d'un extrait (ex: "extrait 3") \
+dans ta reponse : integre directement l'information, les sources sont affichees separement par l'interface.
+- Si tu mentionnes un site ou une adresse web (ex: un portail officiel), ecris-la toujours comme un \
+vrai lien Markdown avec un texte descriptif, par exemple [portail Watiqa](https://www.watiqa.ma) — \
+jamais entre apostrophes inverses (backticks) ni en texte brut.
+- Reponds en francais, de maniere claire, concise et professionnelle.
+"""
+
+MOTIF_SOURCE_FINALE = re.compile(
+    r"\n*\s*(source|sources)\s*:.*$", re.IGNORECASE | re.DOTALL
+)
+
+
+def construire_contexte(chunks):
+    blocs = []
+    for i, c in enumerate(chunks, start=1):
+        blocs.append(f"[Extrait {i} - source: {c['titre']}]\n{c['texte']}")
+    return "\n\n".join(blocs)
+
+
+def _role_groq(role):
+    return "assistant" if role == "bot" else "user"
+
+
+def nettoyer_reponse(texte):
+    texte = MOTIF_SOURCE_FINALE.sub("", texte)
+    return texte.strip()
+
+
+PROMPT_REFORMULATION = """Tu es un module de reformulation de requete pour un moteur de recherche documentaire.
+
+Historique recent de la conversation :
+{contexte_conversation}
+
+Ta seule tache consiste a ecrire une requete de recherche courte (5 a 10 mots), en francais, representant \
+ce que l'utilisateur veut savoir MAINTENANT (son tout dernier message) :
+- Si ce dernier message est une reponse breve a une clarification demandee juste avant par l'assistant \
+(par exemple une precision de situation), combine-le avec le sujet initial de la conversation.
+- Si ce dernier message introduit un sujet different de ce qui precede, ignore le reste de l'historique \
+et base ta requete uniquement sur ce dernier message.
+
+Ecris uniquement la requete de recherche finale. Aucun texte avant ou apres, aucun guillemet, aucune \
+explication, aucune reformulation de cette consigne."""
+
+
+def _reformuler_requete(historique):
+    questions_utilisateur = [t["texte"] for t in historique if t["role"] == "user"]
+    if len(historique) < 3 or len(questions_utilisateur) < 2:
+        return questions_utilisateur[-1] if questions_utilisateur else ""
+
+    tours_recents = historique[-4:]
+    contexte_conversation = "\n".join(
+        f"{'Utilisateur' if t['role'] == 'user' else 'Assistant'} : {t['texte']}" for t in tours_recents
+    )
+
+    api_key = charger_variable_env("GROQ_API_KEY")
+    r = httpx.post(
+        "https://api.groq.com/openai/v1/chat/completions",
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        json={
+            "model": MODELE_LLM,
+            "messages": [{"role": "user", "content": PROMPT_REFORMULATION.format(contexte_conversation=contexte_conversation)}],
+            "max_tokens": 300,
+            "temperature": 0,
+        },
+        timeout=15,
+    )
+    r.raise_for_status()
+    return r.json()["choices"][0]["message"]["content"].strip().strip('"')
+
+
+def _preparer_appel(historique, top_k):
+    requete_recherche = _reformuler_requete(historique)
+    chunks = rechercher_chunks(requete_recherche, top_k=top_k)
+    contexte = construire_contexte(chunks)
+
+    messages = [
+        {"role": "system", "content": f"{PROMPT_SYSTEME}\n\nExtraits disponibles :\n\n{contexte}"}
+    ]
+    for tour in historique:
+        messages.append({"role": _role_groq(tour["role"]), "content": tour["texte"]})
+
+    sources = sorted(set((c["titre"], c["url"]) for c in chunks))
+    return messages, sources
+
+
+def repondre(historique, top_k=5):
+    messages, sources = _preparer_appel(historique, top_k)
+
+    api_key = charger_variable_env("GROQ_API_KEY")
+    r = httpx.post(
+        "https://api.groq.com/openai/v1/chat/completions",
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        json={"model": MODELE_LLM, "messages": messages, "max_tokens": 800, "temperature": 0.2},
+        timeout=30,
+    )
+    r.raise_for_status()
+    reponse_texte = nettoyer_reponse(r.json()["choices"][0]["message"]["content"])
+
+    return reponse_texte, sources
+
+
+def repondre_stream(historique, top_k=5):
+    messages, sources = _preparer_appel(historique, top_k)
+    api_key = charger_variable_env("GROQ_API_KEY")
+
+    with httpx.stream(
+        "POST",
+        "https://api.groq.com/openai/v1/chat/completions",
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        json={"model": MODELE_LLM, "messages": messages, "max_tokens": 800, "temperature": 0.2, "stream": True},
+        timeout=30,
+    ) as r:
+        r.raise_for_status()
+        for ligne in r.iter_lines():
+            if not ligne or not ligne.startswith("data: "):
+                continue
+            charge = ligne[len("data: "):]
+            if charge == "[DONE]":
+                break
+            morceau = json.loads(charge)
+            delta = morceau["choices"][0]["delta"].get("content")
+            if delta:
+                yield delta
+
+    donnees_sources = [{"titre": t, "url": u} for t, u in sources]
+    yield f"\n{MARQUEUR_SOURCES}{json.dumps(donnees_sources, ensure_ascii=False)}"
+
+
+if __name__ == "__main__":
+    historique = [{"role": "user", "texte": "Comment obtenir un acte de naissance ?"}]
+    for morceau in repondre_stream(historique):
+        print(morceau, end="", flush=True)

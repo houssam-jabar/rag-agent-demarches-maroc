@@ -1,0 +1,356 @@
+.dm-widget {
+  --dm-vert: #1f6f4a;
+  --dm-vert-fonce: #14513a;
+  --dm-bordeaux: #8b2332;
+  --dm-papier: #f7f7f5;
+  --dm-encre: #23272a;
+  --dm-encre-douce: #6b7280;
+  --dm-bordure: #e2e1dc;
+  --dm-bulle-bot: #eef3ef;
+
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 999;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+.dm-lanceur {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: none;
+  background: var(--dm-vert);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(31, 111, 74, 0.35);
+  transition: transform 0.15s ease, background 0.15s ease;
+  margin-left: auto;
+}
+
+.dm-lanceur:hover {
+  background: var(--dm-vert-fonce);
+  transform: scale(1.05);
+}
+
+.dm-lanceur:focus-visible {
+  outline: 2px solid var(--dm-bordeaux);
+  outline-offset: 3px;
+}
+
+.dm-lanceur-croix {
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 300;
+}
+
+.dm-panel {
+  width: 360px;
+  max-width: 92vw;
+  height: min(560px, 78vh);
+  background: var(--dm-papier);
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22), 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-bottom: 14px;
+  animation: dm-apparition 0.18s ease-out;
+}
+
+@keyframes dm-apparition {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.dm-header {
+  background: var(--dm-vert);
+  color: white;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: none;
+}
+
+.dm-header-identite {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dm-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--dm-bordeaux);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.dm-titre {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.dm-sous-titre {
+  margin: 1px 0 0;
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.dm-fermer {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+
+.dm-fermer:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.dm-corps {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dm-accueil p {
+  margin: 0 0 12px;
+  color: var(--dm-encre-douce);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.dm-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dm-suggestions button {
+  text-align: left;
+  background: white;
+  border: 1px solid var(--dm-bordure);
+  color: var(--dm-vert-fonce);
+  padding: 8px 12px;
+  border-radius: 9px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.dm-suggestions button:hover {
+  border-color: var(--dm-vert);
+  background: var(--dm-bulle-bot);
+}
+
+.dm-message {
+  max-width: 84%;
+  padding: 9px 13px;
+  border-radius: 13px;
+  font-size: 13.8px;
+  line-height: 1.5;
+}
+
+.dm-message p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.dm-message.dm-bot p {
+  white-space: normal;
+  margin: 0 0 8px;
+}
+
+.dm-message.dm-bot p:last-child {
+  margin-bottom: 0;
+}
+
+.dm-message.dm-bot ul,
+.dm-message.dm-bot ol {
+  margin: 0 0 8px;
+  padding-left: 0;
+  list-style: none;
+}
+
+.dm-message.dm-bot ol {
+  counter-reset: dm-etape;
+}
+
+.dm-message.dm-bot li {
+  position: relative;
+  padding-left: 15px;
+  margin-bottom: 4px;
+  text-align: left;
+}
+
+.dm-message.dm-bot li:last-child {
+  margin-bottom: 0;
+}
+
+.dm-message.dm-bot ul li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--dm-vert-fonce);
+}
+
+.dm-message.dm-bot ol li{
+  counter-increment: dm-etape;
+}
+
+.dm-message.dm-bot ol li::before {
+  content: counter(dm-etape) ".";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--dm-vert-fonce);
+  font-weight: 600;
+}
+
+.dm-message.dm-bot strong {
+  font-weight: 700;
+  color: var(--dm-vert-fonce);
+}
+
+.dm-message.dm-bot a {
+  color: #1a56db;
+  text-decoration: underline;
+  word-break: break-all;
+}
+
+.dm-message.dm-bot code {
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.92em;
+  background: rgba(0, 0, 0, 0.06);
+  padding: 1px 4px;
+  border-radius: 4px;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.dm-verification {
+  margin-top: 9px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+}
+
+.dm-verification span {
+  color: var(--dm-encre-douce);
+  font-weight: 600;
+}
+
+.dm-verification a {
+  color: #1a56db;
+  text-decoration: underline;
+}
+
+.dm-message.dm-user {
+  align-self: flex-end;
+  background: var(--dm-vert);
+  color: white;
+  border-bottom-right-radius: 3px;
+}
+
+.dm-message.dm-bot {
+  align-self: flex-start;
+  background: var(--dm-bulle-bot);
+  color: var(--dm-encre);
+  border-bottom-left-radius: 3px;
+}
+
+.dm-frappe {
+  display: flex;
+  gap: 4px;
+  padding: 13px 15px;
+  align-items: center;
+}
+
+.dm-frappe span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--dm-encre-douce);
+  animation: dm-rebond 1.1s infinite ease-in-out;
+}
+
+.dm-frappe span:nth-child(2) { animation-delay: 0.15s; }
+.dm-frappe span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes dm-rebond {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+.dm-saisie {
+  flex: none;
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--dm-bordure);
+  background: white;
+}
+
+.dm-saisie input {
+  flex: 1;
+  border: 1px solid var(--dm-bordure);
+  border-radius: 9px;
+  padding: 9px 12px;
+  font-size: 13.5px;
+  font-family: inherit;
+}
+
+.dm-saisie input:focus {
+  outline: none;
+  border-color: var(--dm-vert);
+}
+
+.dm-saisie button {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  border: none;
+  background: var(--dm-vert);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: none;
+}
+
+.dm-saisie button:hover:not(:disabled) {
+  background: var(--dm-vert-fonce);
+}
+
+.dm-saisie button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dm-panel { animation: none; }
+  .dm-frappe span { animation: none; opacity: 0.8; }
+}

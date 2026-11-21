@@ -19,7 +19,7 @@ Projet de Fin d'Année (UIR).
 
 ## Architecture
 
-![Pipeline hors ligne (indexation) et en ligne (question → réponse)](docs/pipeline.png)
+![RAG pipeline: offline indexing and online question answering](docs/pipeline.png)
 
 ```
 Site source -> Scraping -> Nettoyage -> Chunking -> Embeddings -> Pinecone

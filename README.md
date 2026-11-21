@@ -19,6 +19,8 @@ Projet de Fin d'Année (UIR).
 
 ## Architecture
 
+![Pipeline hors ligne (indexation) et en ligne (question → réponse)](docs/pipeline.png)
+
 ```
 Site source -> Scraping -> Nettoyage -> Chunking -> Embeddings -> Pinecone
 Question -> React -> FastAPI -> Pinecone (recherche) -> Groq/Llama -> Réponse
